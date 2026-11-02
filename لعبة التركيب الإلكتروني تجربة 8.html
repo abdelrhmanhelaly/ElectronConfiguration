@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة التوزيع الإلكتروني لكيمياء العناصر</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1325;
+            --card-bg: #111d35;
+            --box-bg: #182849;
+            --accent-blue: #0284c7;
+            --accent-blue-hover: #0369a1;
+            --btn-key-bg: #22375d;
+            --btn-key-border: #3b5998;
+            --text-gold: #f59e0b;
+            --text-white: #f8fafc;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-white);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+        }
+
+        .game-container {
+            background-color: var(--card-bg);
+            border: 1.5px solid #1e3a6a;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 440px;
+            height: 98vh;
+            max-height: 840px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        .shake-anim {
+            animation: shake 0.35s ease-in-out;
+            border-color: var(--danger) !important;
+        }
+
+        .levels-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .level-btn {
+            background: #172643;
+            color: #94a3b8;
+            border: 1px solid #233b67;
+            padding: 5px 2px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .level-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: #38bdf8;
+            box-shadow: 0 0 8px rgba(2, 132, 199, 0.4);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .toggle-timer {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .toggle-timer.active {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: #38bdf8;
+        }
+
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 5px;
+            background: #1e293b;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--success);
+            transition: width 1s linear, background-color 0.2s;
+        }
+
+        .designer-badge {
+            background: #13223f;
+            border: 1px solid #1d4ed8;
+            border-radius: 8px;
+            padding: 3px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .question-card {
+            background: #14223d;
+            border: 1px dashed #2563eb;
+            border-radius: 12px;
+            padding: 6px 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 85px;
+        }
+
+        .question-title {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .question-element {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #38bdf8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            direction: rtl;
+            line-height: 1.2;
+        }
+
+        .chemical-ion-wrapper {
+            display: inline-flex;
+            direction: ltr;
+            align-items: baseline;
+            font-family: monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #38bdf8;
+        }
+
+        .chemical-ion-wrapper sup {
+            color: #facc15;
+            font-size: 1.15rem;
+            margin-left: 2px;
+            font-weight: 900;
+        }
+
+        .orig-electrons {
+            font-size: 0.82rem;
+            color: #a5f3fc;
+            background: #082f49;
+            padding: 1px 6px;
+            border-radius: 6px;
+            margin-right: 4px;
+            border: 1px solid #0284c7;
+        }
+
+        .question-sub {
+            font-size: 0.72rem;
+            color: #facc15;
+            margin-top: 2px;
+        }
+
+        .display-screen {
+            background: #090e1a;
+            border: 1.5px solid #1e3a6a;
+            border-radius: 10px;
+            min-height: 42px;
+            max-height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 10px;
+            overflow-x: auto;
+            transition: all 0.2s ease;
+        }
+
+        .display-screen.correct-flash {
+            background: #064e3b !important;
+            border-color: var(--success) !important;
+        }
+
+        .display-screen.wrong-flash {
+            background: #4c0519 !important;
+            border-color: var(--danger) !important;
+        }
+
+        .screen-text {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-family: monospace;
+            font-size: 1.05rem;
+            color: #fff;
+            direction: ltr;
+        }
+
+        .screen-text sup {
+            color: #f59e0b;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .backspace-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .solution-hint-box {
+            display: none;
+            background: rgba(220, 38, 38, 0.25);
+            border: 1px solid var(--danger);
+            color: #fecaca;
+            font-size: 0.82rem;
+            padding: 4px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .keypad-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .keys-grid {
+            display: grid;
+            grid-gap: 4px;
+            width: 100%;
+        }
+
+        .key-btn {
+            background: var(--btn-key-bg);
+            border: 1px solid var(--btn-key-border);
+            color: #f8fafc;
+            border-radius: 8px;
+            padding: 7px 2px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.1s;
+        }
+
+        .key-btn:active {
+            transform: scale(0.95);
+            background: #2b4577;
+        }
+
+        .key-num { color: var(--text-gold); }
+        .key-suborb { color: #38bdf8; font-size: 1rem; }
+        .key-nobleorb { color: #4ade80; font-size: 0.85rem; padding: 6px 1px; }
+        .key-opt { font-size: 0.8rem; padding: 8px 1px; }
+
+        .action-btn-main {
+            background: var(--accent-blue);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 9px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
+        }
+
+        .bottom-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .skip-btn {
+            background: var(--warning);
+            color: #000;
+            font-weight: 700;
+            padding: 7px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .end-btn {
+            background: var(--danger);
+            color: white;
+            font-weight: 700;
+            padding: 7px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .hadith-card {
+            background: #091122;
+            border: 1px solid #142a4a;
+            border-radius: 8px;
+            padding: 4px 6px;
+            font-size: 0.72rem;
+            color: #34d399;
+            text-align: center;
+            font-weight: 600;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-blue);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+        .modal-body { font-size: 0.92rem; color: #cbd5e1; margin-bottom: 14px; white-space: pre-line; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="main-box">
+    <div class="levels-nav">
+        <button class="level-btn active" onclick="switchLevel(1)">المستوى 1</button>
+        <button class="level-btn" onclick="switchLevel(2)">المستوى 2</button>
+        <button class="level-btn" onclick="switchLevel(3)">المستوى 3</button>
+        <button class="level-btn" onclick="switchLevel(4)">المستوى 4</button>
+    </div>
+
+    <div class="status-bar">
+        <div class="stat-item" style="color: #ef4444;"><span id="lives-display">3</span> ❤️</div>
+        <div class="stat-item" style="color: #eab308;"><span id="skips-display">3</span> ⚡</div>
+        <div class="stat-item" style="color: #38bdf8;"><span id="score-display">0</span> 🏆</div>
+        <button class="toggle-timer" id="timer-toggle-btn" onclick="toggleTimerMode()">التايمر: مغلق ⏱️</button>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span id="timer-text">--</span>
+            <span id="question-count-text">السؤال: 1 / 15</span>
+        </div>
+        <div class="timer-bar-container">
+            <div class="timer-bar-fill" id="timer-fill"></div>
+        </div>
+    </div>
+
+    <div class="designer-badge">
+        <span>👨‍🏫 مصمم اللعبة: أ/ عبد الرحمن عبد الله</span>
+        <span>📞 01021779644</span>
+    </div>
+
+    <div class="question-card">
+        <div class="question-title" id="q-title">...</div>
+        <div class="question-element" id="q-element">...</div>
+        <div class="question-sub" id="q-sub">...</div>
+    </div>
+
+    <div class="display-screen" id="input-screen">
+        <button class="backspace-btn" onclick="backspace()" title="مسح">⌫</button>
+        <div class="screen-text" id="user-input"></div>
+    </div>
+
+    <div class="solution-hint-box" id="hint-box"></div>
+
+    <div class="keypad-container" id="dynamic-keypad"></div>
+
+    <button class="action-btn-main" onclick="submitAnswer()">تأكيد الإجابة ✓</button>
+
+    <div class="bottom-actions">
+        <button class="skip-btn" onclick="skipQuestion()">تخطي (<span id="skip-btn-count">3</span>)</button>
+        <button class="end-btn" onclick="endGame()">إنهاء اللعبة</button>
+    </div>
+
+    <div class="hadith-card" id="hadith-box"></div>
+</div>
+
+<div class="modal" id="game-modal">
+    <div class="modal-content">
+        <div class="modal-title" id="modal-title">انتهت اللعبة!</div>
+        <div class="modal-body" id="modal-body"></div>
+        <button class="action-btn-main" style="width: 100%;" onclick="restartGame()">إعادة اللعب 🔄</button>
+    </div>
+</div>
+
+<script>
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function playSound(type) {
+        try {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            }
+        } catch(e) {}
+    }
+
+    const superscripts = {
+        '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵',
+        '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '10': '¹⁰',
+        '11': '¹¹', '12': '¹²', '13': '¹³', '14': '¹⁴'
+    };
+
+    // تمت إزالة كلمة شاذ من جميع العناصر تماماً
+    const elementsData = [
+        { z: 1, name: "الهيدروجين", sym: "H", aufbau: "1s¹", noble: "1s¹", ions: { sym: "H⁺", ans: "1s⁰" }, unpaired: 1, period: 1, group: "1A", block: "s", type: "لا فلز ممثل" },
+        { z: 2, name: "الهيليوم", sym: "He", aufbau: "1s²", noble: "[He]", ions: null, unpaired: 0, period: 1, group: "0", block: "s", type: "غاز خامل" },
+        { z: 3, name: "الليثيوم", sym: "Li", aufbau: "1s² 2s¹", noble: "[He] 2s¹", ions: { sym: "Li⁺", ans: "[He]" }, unpaired: 1, period: 2, group: "1A", block: "s", type: "فلز ممثل" },
+        { z: 6, name: "الكربون", sym: "C", aufbau: "1s² 2s² 2p²", noble: "[He] 2s² 2p²", ions: null, unpaired: 2, period: 2, group: "4A", block: "p", type: "لا فلز ممثل" },
+        { z: 7, name: "النيتروجين", sym: "N", aufbau: "1s² 2s² 2p³", noble: "[He] 2s² 2p³", ions: { sym: "N³⁻", ans: "[Ne]" }, unpaired: 3, period: 2, group: "5A", block: "p", type: "لا فلز ممثل" },
+        { z: 8, name: "الأكسجين", sym: "O", aufbau: "1s² 2s² 2p⁴", noble: "[He] 2s² 2p⁴", ions: { sym: "O²⁻", ans: "[Ne]" }, unpaired: 2, period: 2, group: "6A", block: "p", type: "لا فلز ممثل" },
+        { z: 9, name: "الفلور", sym: "F", aufbau: "1s² 2s² 2p⁵", noble: "[He] 2s² 2p⁵", ions: { sym: "F⁻", ans: "[Ne]" }, unpaired: 1, period: 2, group: "7A", block: "p", type: "لا فلز ممثل" },
+        { z: 10, name: "النيون", sym: "Ne", aufbau: "1s² 2s² 2p⁶", noble: "[Ne]", ions: null, unpaired: 0, period: 2, group: "0", block: "p", type: "غاز خامل" },
+        { z: 11, name: "الصوديوم", sym: "Na", aufbau: "1s² 2s² 2p⁶ 3s¹", noble: "[Ne] 3s¹", ions: { sym: "Na⁺", ans: "[Ne]" }, unpaired: 1, period: 3, group: "1A", block: "s", type: "فلز ممثل" },
+        { z: 12, name: "الماغنسيوم", sym: "Mg", aufbau: "1s² 2s² 2p⁶ 3s²", noble: "[Ne] 3s²", ions: { sym: "Mg²⁺", ans: "[Ne]" }, unpaired: 0, period: 3, group: "2A", block: "s", type: "فلز ممثل" },
+        { z: 13, name: "الألومنيوم", sym: "Al", aufbau: "1s² 2s² 2p⁶ 3s² 3p¹", noble: "[Ne] 3s² 3p¹", ions: { sym: "Al³⁺", ans: "[Ne]" }, unpaired: 1, period: 3, group: "3A", block: "p", type: "فلز ممثل" },
+        { z: 16, name: "الكبريت", sym: "S", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁴", noble: "[Ne] 3s² 3p⁴", ions: { sym: "S²⁻", ans: "[Ar]" }, unpaired: 2, period: 3, group: "6A", block: "p", type: "لا فلز ممثل" },
+        { z: 17, name: "الكلور", sym: "Cl", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁵", noble: "[Ne] 3s² 3p⁵", ions: { sym: "Cl⁻", ans: "[Ar]" }, unpaired: 1, period: 3, group: "7A", block: "p", type: "لا فلز ممثل" },
+        { z: 18, name: "الأرجون", sym: "Ar", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶", noble: "[Ar]", ions: null, unpaired: 0, period: 3, group: "0", block: "p", type: "غاز خامل" },
+        { z: 19, name: "البوتاسيوم", sym: "K", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹", noble: "[Ar] 4s¹", ions: { sym: "K⁺", ans: "[Ar]" }, unpaired: 1, period: 4, group: "1A", block: "s", type: "فلز ممثل" },
+        { z: 20, name: "الكالسيوم", sym: "Ca", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s²", noble: "[Ar] 4s²", ions: { sym: "Ca²⁺", ans: "[Ar]" }, unpaired: 0, period: 4, group: "2A", block: "s", type: "فلز ممثل" },
+        { z: 24, name: "الكروم", sym: "Cr", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹ 3d⁵", noble: "[Ar] 4s¹ 3d⁵", ions: { sym: "Cr³⁺", ans: "[Ar] 3d³" }, unpaired: 6, period: 4, group: "6B", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 26, name: "الحديد", sym: "Fe", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d⁶", noble: "[Ar] 4s² 3d⁶", ions: { sym: "Fe²⁺", ans: "[Ar] 3d⁶" }, unpaired: 4, period: 4, group: "8", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 29, name: "النحاس", sym: "Cu", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹ 3d¹⁰", noble: "[Ar] 4s¹ 3d¹⁰", ions: { sym: "Cu²⁺", ans: "[Ar] 3d⁹" }, unpaired: 1, period: 4, group: "1B", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 30, name: "الخارصين", sym: "Zn", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰", noble: "[Ar] 4s² 3d¹⁰", ions: { sym: "Zn²⁺", ans: "[Ar] 3d¹⁰" }, unpaired: 0, period: 4, group: "2B", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 35, name: "البروم", sym: "Br", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁵", noble: "[Ar] 4s² 3d¹⁰ 4p⁵", ions: { sym: "Br⁻", ans: "[Kr]" }, unpaired: 1, period: 4, group: "7A", block: "p", type: "لا فلز ممثل" },
+        { z: 36, name: "الكريبتون", sym: "Kr", aufbau: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶", noble: "[Kr]", ions: null, unpaired: 0, period: 4, group: "0", block: "p", type: "غاز خامل" },
+        { z: 47, name: "الفضة", sym: "Ag", aufbau: "[Kr] 5s¹ 4d¹⁰", noble: "[Kr] 5s¹ 4d¹⁰", ions: { sym: "Ag⁺", ans: "[Kr] 4d¹⁰" }, unpaired: 1, period: 5, group: "1B", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 54, name: "الزينون", sym: "Xe", aufbau: "[Kr] 5s² 4d¹⁰ 5p⁶", noble: "[Xe]", ions: null, unpaired: 0, period: 5, group: "0", block: "p", type: "غاز خامل" },
+        { z: 56, name: "الباريوم", sym: "Ba", aufbau: "[Xe] 6s²", noble: "[Xe] 6s²", ions: { sym: "Ba²⁺", ans: "[Xe]" }, unpaired: 0, period: 6, group: "2A", block: "s", type: "فلز ممثل" },
+        { z: 79, name: "الذهب", sym: "Au", aufbau: "[Xe] 6s¹ 4f¹⁴ 5d¹⁰", noble: "[Xe] 6s¹ 4f¹⁴ 5d¹⁰", ions: { sym: "Au³⁺", ans: "[Xe] 4f¹⁴ 5d⁸" }, unpaired: 1, period: 6, group: "1B", block: "d", type: "عنصر انتقالي رئيسي" },
+        { z: 80, name: "الزئبق", sym: "Hg", aufbau: "[Xe] 6s² 4f¹⁴ 5d¹⁰", noble: "[Xe] 6s² 4f¹⁴ 5d¹⁰", ions: { sym: "Hg²⁺", ans: "[Xe] 4f¹⁴ 5d¹⁰" }, unpaired: 0, period: 6, group: "2B", block: "d", type: "عنصر انتقالي رئيسي" }
+    ];
+
+    const hadiths = [
+        "🌿 قال ﷺ: «مَن سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا، سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الجَنَّةِ»",
+        "🌿 قال ﷺ: «كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي المِيزَانِ: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ»",
+        "🌿 قال ﷺ: «لا حولَ ولا قوَّةَ إلا باللهِ فإنَّها كَنْزٌ من كُنوزِ الجَنَّةِ»",
+        "🌿 قال ﷺ: «أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ»",
+        "🌿 قال ﷺ: «اتَّقِ اللَّهَ حَيْثُمَا كُنْتَ، وَأَتْبِعِ السَّيِّئَةَ الحَسَنَةَ تَمْحُهَا»"
+    ];
+
+    let currentLevel = 1;
+    let score = 0;
+    let lives = 3;
+    let skips = 3;
+    let questionIndex = 0;
+    const totalQuestions = 15;
+    let currentQuestionData = null;
+    let timerEnabled = false;
+    let timerInterval = null;
+    let timeLeft = 0;
+    let totalTime = 30;
+    let isTransitioning = false;
+
+    function init() {
+        showRandomHadith();
+        loadQuestion();
+    }
+
+    function showRandomHadith() {
+        const rand = Math.floor(Math.random() * hadiths.length);
+        document.getElementById('hadith-box').innerText = hadiths[rand];
+    }
+
+    function switchLevel(lvl) {
+        currentLevel = lvl;
+        document.querySelectorAll('.level-btn').forEach((btn, idx) => {
+            btn.classList.toggle('active', (idx + 1) === lvl);
+        });
+        resetGameStats();
+        loadQuestion();
+    }
+
+    function resetGameStats() {
+        score = 0;
+        lives = 3;
+        skips = 3;
+        questionIndex = 0;
+        updateUIStats();
+    }
+
+    function updateUIStats() {
+        document.getElementById('lives-display').innerText = lives;
+        document.getElementById('skips-display').innerText = skips;
+        document.getElementById('skip-btn-count').innerText = skips;
+        document.getElementById('score-display').innerText = score;
+        document.getElementById('question-count-text').innerText = `السؤال: ${questionIndex + 1} / ${totalQuestions}`;
+    }
+
+    function toggleTimerMode() {
+        timerEnabled = !timerEnabled;
+        const btn = document.getElementById('timer-toggle-btn');
+        if (timerEnabled) {
+            btn.classList.add('active');
+            btn.innerText = "التايمر: مفعل ⏱️";
+            startTimer();
+        } else {
+            btn.classList.remove('active');
+            btn.innerText = "التايمر: مغلق ⏱️";
+            clearInterval(timerInterval);
+            document.getElementById('timer-text').innerText = "--";
+            document.getElementById('timer-fill').style.width = "100%";
+        }
+    }
+
+    function startTimer() {
+        if (!timerEnabled) return;
+        clearInterval(timerInterval);
+        totalTime = currentLevel === 1 ? 35 : 20;
+        timeLeft = totalTime;
+        updateTimerDisplay();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                triggerWrongEffect(true);
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const fill = document.getElementById('timer-fill');
+        const text = document.getElementById('timer-text');
+        text.innerText = `${timeLeft}s ⏱️`;
+        const percentage = (timeLeft / totalTime) * 100;
+        fill.style.width = `${percentage}%`;
+        fill.style.backgroundColor = percentage < 25 ? "var(--danger)" : "var(--success)";
+    }
+
+    function formatIonHTML(symWithCharge) {
+        const match = symWithCharge.match(/^([A-Za-z]+)(.*)$/);
+        if (match) {
+            return `<span class="chemical-ion-wrapper">${match[1]}<sup>${match[2]}</sup></span>`;
+        }
+        return `<span class="chemical-ion-wrapper">${symWithCharge}</span>`;
+    }
+
+    function loadQuestion() {
+        if (questionIndex >= totalQuestions) {
+            showEndModal("تهانينا! 🎉", `لقد أنهيت هذا المستوى بنجاح!\nمجموع نقاطك: ${score}`);
+            return;
+        }
+
+        clearInput();
+        hideHint();
+        updateUIStats();
+        showRandomHadith();
+        isTransitioning = false;
+
+        let pool = elementsData;
+        if (currentLevel === 3) {
+            pool = elementsData.filter(e => e.ions !== null);
+        }
+
+        const el = pool[Math.floor(Math.random() * pool.length)];
+        currentQuestionData = { element: el };
+
+        const qTitle = document.getElementById('q-title');
+        const qElem = document.getElementById('q-element');
+        const qSub = document.getElementById('q-sub');
+
+        if (currentLevel === 1) {
+            qTitle.innerText = "اكتب التركيب الإلكتروني بمبدأ البناء التصاعدي:";
+            qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span> <span class="orig-electrons">(${el.z}e⁻)</span>`;
+            qSub.innerText = "اكتب رقم رئيسي ثم الحرف ثم عدد الإلكترونات";
+            currentQuestionData.expected = el.aufbau;
+            currentQuestionData.type = "subshell_only";
+        } 
+        else if (currentLevel === 2) {
+            qTitle.innerText = "اكتب التوزيع الإلكتروني لأقرب غاز خامل:";
+            qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span> <span class="orig-electrons">(${el.z}e⁻)</span>`;
+            qSub.innerText = "اختر الغاز الخامل ثم أكمل باقي المستويات الفرعية";
+            currentQuestionData.expected = el.noble;
+            currentQuestionData.type = "noble_subshell";
+        } 
+        else if (currentLevel === 3) {
+            const ion = el.ions;
+            qTitle.innerText = "توزيع أيون العنصر لأقرب غاز خامل بعد الفقد أو الاكتساب:";
+            qElem.innerHTML = `
+                <span>أيون ${el.name}:</span> 
+                ${formatIonHTML(ion.sym)} 
+                <span class="orig-electrons">الأصلي: ${el.z}e⁻</span>
+            `;
+            qSub.innerText = "اختر الغاز الخامل الناتج أو وزع باقي إلكترونات الأيون";
+            currentQuestionData.expected = ion.ans;
+            currentQuestionData.type = "noble_subshell";
+        } 
+        else if (currentLevel === 4) {
+            const subTypes = ['unpaired', 'block', 'period', 'group', 'type'];
+            const chosen = subTypes[Math.floor(Math.random() * subTypes.length)];
+            currentQuestionData.propType = chosen;
+
+            if (chosen === 'unpaired') {
+                qTitle.innerText = "ما هو عدد الإلكترونات المفردة في الذرة؟";
+                qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span> <span class="orig-electrons">(${el.z}e⁻)</span>`;
+                qSub.innerText = "اختر عدد الإلكترونات المفردة";
+                currentQuestionData.expected = el.unpaired.toString();
+                currentQuestionData.type = "numbers_only";
+            } else if (chosen === 'block') {
+                qTitle.innerText = "ما هي الفئة التي ينتمي إليها العنصر؟";
+                qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span>`;
+                qSub.innerText = "اختر رمز الفئة (s, p, d, f)";
+                currentQuestionData.expected = el.block;
+                currentQuestionData.type = "block_choice";
+            } else if (chosen === 'period') {
+                qTitle.innerText = "يقع هذا العنصر في الدورة رقم:";
+                qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span>`;
+                qSub.innerText = "اختر رقم الدورة في الجدول الدوري";
+                currentQuestionData.expected = el.period.toString();
+                currentQuestionData.type = "numbers_only";
+            } else if (chosen === 'group') {
+                qTitle.innerText = "ما هي المجموعة التي ينتمي إليها العنصر؟";
+                qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span>`;
+                qSub.innerText = "اختر رمز المجموعة";
+                currentQuestionData.expected = el.group;
+                currentQuestionData.type = "group_choice";
+            } else if (chosen === 'type') {
+                qTitle.innerText = "ما هو نوع هذا العنصر؟";
+                qElem.innerHTML = `<span>${el.name}</span> <span class="chemical-ion-wrapper">${el.sym}</span>`;
+                qSub.innerText = "اختر تصنيف نوع العنصر";
+                currentQuestionData.expected = el.type;
+                currentQuestionData.type = "type_choice";
+            }
+        }
+
+        renderKeypad(currentQuestionData.type);
+        if (timerEnabled) startTimer();
+    }
+
+    function renderKeypad(type) {
+        const container = document.getElementById('dynamic-keypad');
+        container.innerHTML = "";
+
+        if (type === "subshell_only" || type === "noble_subshell") {
+            if (type === "noble_subshell") {
+                const nobleRow = document.createElement('div');
+                nobleRow.className = "keys-grid";
+                nobleRow.style.gridTemplateColumns = "repeat(6, 1fr)";
+                const nobles = ['[He]', '[Ne]', '[Ar]', '[Kr]', '[Xe]', '[Rn]'];
+                nobles.forEach(n => {
+                    nobleRow.innerHTML += `<button class="key-btn key-nobleorb" onclick="appendToken('${n} ')">${n}</button>`;
+                });
+                container.appendChild(nobleRow);
+            }
+
+            const numRow1 = document.createElement('div');
+            numRow1.className = "keys-grid";
+            numRow1.style.gridTemplateColumns = "repeat(7, 1fr)";
+            for (let i = 1; i <= 7; i++) {
+                numRow1.innerHTML += `<button class="key-btn key-num" onclick="smartAppendNumber('${i}')">${i}</button>`;
+            }
+            container.appendChild(numRow1);
+
+            const numRow2 = document.createElement('div');
+            numRow2.className = "keys-grid";
+            numRow2.style.gridTemplateColumns = "repeat(7, 1fr)";
+            for (let i = 8; i <= 14; i++) {
+                numRow2.innerHTML += `<button class="key-btn key-num" onclick="smartAppendNumber('${i}')">${i}</button>`;
+            }
+            container.appendChild(numRow2);
+
+            const subRow = document.createElement('div');
+            subRow.className = "keys-grid";
+            subRow.style.gridTemplateColumns = "repeat(5, 1fr)";
+            ['s', 'p', 'd', 'f'].forEach(o => {
+                subRow.innerHTML += `<button class="key-btn key-suborb" onclick="appendToken('${o}')">${o}</button>`;
+            });
+            subRow.innerHTML += `<button class="key-btn" onclick="appendToken(' ')">مسافة</button>`;
+            container.appendChild(subRow);
+        }
+        else if (type === "numbers_only") {
+            const numRow = document.createElement('div');
+            numRow.className = "keys-grid";
+            numRow.style.gridTemplateColumns = "repeat(7, 1fr)";
+            for (let i = 0; i <= 6; i++) {
+                numRow.innerHTML += `<button class="key-btn key-num" onclick="appendToken('${i}')">${i}</button>`;
+            }
+            container.appendChild(numRow);
+        }
+        else if (type === "block_choice") {
+            const blockRow = document.createElement('div');
+            blockRow.className = "keys-grid";
+            blockRow.style.gridTemplateColumns = "repeat(4, 1fr)";
+            ['s', 'p', 'd', 'f'].forEach(b => {
+                blockRow.innerHTML += `<button class="key-btn key-suborb" onclick="appendToken('${b}')">${b}</button>`;
+            });
+            container.appendChild(blockRow);
+        }
+        else if (type === "group_choice") {
+            const groupRow = document.createElement('div');
+            groupRow.className = "keys-grid";
+            groupRow.style.gridTemplateColumns = "repeat(4, 1fr)";
+            const groups = ['1A', '2A', '3A', '4A', '5A', '6A', '7A', '0', '1B', '2B', '6B', '8'];
+            groups.forEach(g => {
+                groupRow.innerHTML += `<button class="key-btn key-opt" onclick="appendToken('${g}')">${g}</button>`;
+            });
+            container.appendChild(groupRow);
+        }
+        else if (type === "type_choice") {
+            const typeRow = document.createElement('div');
+            typeRow.className = "keys-grid";
+            typeRow.style.gridTemplateColumns = "repeat(2, 1fr)";
+            const types = ['فلز ممثل', 'لا فلز ممثل', 'عنصر انتقالي رئيسي', 'غاز خامل'];
+            types.forEach(t => {
+                typeRow.innerHTML += `<button class="key-btn key-opt" onclick="appendToken('${t}')">${t}</button>`;
+            });
+            container.appendChild(typeRow);
+        }
+    }
+
+    function smartAppendNumber(num) {
+        if (isTransitioning) return;
+        const inputDiv = document.getElementById('user-input');
+        const text = inputDiv.innerText;
+        const lastChar = text.length > 0 ? text[text.length - 1] : '';
+
+        if (['s', 'p', 'd', 'f'].includes(lastChar)) {
+            const sup = superscripts[num] || num;
+            inputDiv.innerText += sup + " ";
+        } else {
+            inputDiv.innerText += num;
+        }
+    }
+
+    function appendToken(val) {
+        if (isTransitioning) return;
+        const inputDiv = document.getElementById('user-input');
+        inputDiv.innerText += val;
+    }
+
+    function backspace() {
+        if (isTransitioning) return;
+        const inputDiv = document.getElementById('user-input');
+        let text = inputDiv.innerText;
+        if (text.endsWith(' ')) {
+            text = text.slice(0, -1);
+        }
+        inputDiv.innerText = text.slice(0, -1);
+    }
+
+    function clearInput() {
+        document.getElementById('user-input').innerText = "";
+    }
+
+    function hideHint() {
+        const hintBox = document.getElementById('hint-box');
+        hintBox.style.display = "none";
+        hintBox.innerText = "";
+    }
+
+    function normalize(str) {
+        return str.replace(/\s+/g, '').trim().toLowerCase();
+    }
+
+    function submitAnswer() {
+        if (isTransitioning) return;
+        const userVal = document.getElementById('user-input').innerText;
+        if (!userVal.trim()) return;
+
+        const isCorrect = normalize(userVal) === normalize(currentQuestionData.expected);
+
+        if (isCorrect) {
+            triggerCorrectEffect();
+        } else {
+            triggerWrongEffect(false);
+        }
+    }
+
+    function triggerCorrectEffect() {
+        isTransitioning = true;
+        playSound('success');
+        
+        const screen = document.getElementById('input-screen');
+        screen.classList.add('correct-flash');
+
+        score += 10;
+        questionIndex++;
+
+        setTimeout(() => {
+            screen.classList.remove('correct-flash');
+            loadQuestion();
+        }, 650);
+    }
+
+    function triggerWrongEffect(isTimeout) {
+        if (isTransitioning) return;
+        isTransitioning = true; // قفل الإدخال أثناء عرض النتيجة لمنع التكرار
+
+        playSound('error');
+
+        if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100]);
+        }
+
+        const screen = document.getElementById('input-screen');
+        const mainBox = document.getElementById('main-box');
+        const hintBox = document.getElementById('hint-box');
+
+        screen.classList.add('wrong-flash');
+        mainBox.classList.add('shake-anim');
+
+        // خصم قلب واحد فقط
+        lives--;
+        updateUIStats();
+
+        // إظهار الإجابة الصحيحة مباشرة
+        hintBox.innerText = isTimeout 
+            ? `⏱️ انتهى الوقت! الإجابة هي: ${currentQuestionData.expected}`
+            : `❌ خطأ! الإجابة الصحيحة هي: ${currentQuestionData.expected}`;
+        hintBox.style.display = "block";
+
+        setTimeout(() => {
+            screen.classList.remove('wrong-flash');
+            mainBox.classList.remove('shake-anim');
+        }, 400);
+
+        if (lives <= 0) {
+            setTimeout(() => {
+                showEndModal("للأسف نفدت المحاولات! 💔", `الإجابة الصحيحة كانت:\n${currentQuestionData.expected}\n\nمجموع نقاطك: ${score}`);
+            }, 1000);
+        } else {
+            // الانتقال التلقائي للسؤال التالي بعد ثانية ونصف
+            setTimeout(() => {
+                questionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+    }
+
+    function skipQuestion() {
+        if (isTransitioning) return;
+        if (skips > 0) {
+            skips--;
+            questionIndex++;
+            updateUIStats();
+            loadQuestion();
+        }
+    }
+
+    function endGame() {
+        showEndModal("تم إنهاء اللعبة", `مجموع النقاط التي حققتها: ${score}`);
+    }
+
+    function showEndModal(title, body) {
+        clearInterval(timerInterval);
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerText = body;
+        document.getElementById('game-modal').style.display = 'flex';
+    }
+
+    function restartGame() {
+        document.getElementById('game-modal').style.display = 'none';
+        resetGameStats();
+        loadQuestion();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
